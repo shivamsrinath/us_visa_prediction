@@ -16,7 +16,7 @@ class MongoDBClient:
     Description :   This method exports the dataframe from mongodb feature store as dataframe 
     
     Output      :   connection to mongodb database
-    On Failure  :   raises an exception
+    On Failure  :   raises an exception             
     """
     client = None
 
