@@ -1,10 +1,12 @@
-name: Deploy Application Docker Image to EC2 instance
+name: Deploy Application Docker Image to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
+
   Continuous-Integration:
     runs-on: ubuntu-latest
 
@@ -23,7 +25,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build, tag, and push image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: visa
@@ -31,28 +33,28 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
 
   Continuous-Deployment:
-  needs: Continuous-Integration
-  runs-on: self-hosted
+    needs: Continuous-Integration
+    runs-on: self-hosted
 
-  steps:
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-    - name: Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Run Docker Image
-      run: |
-        docker stop visa-app || true
-        docker rm visa-app || true
-        docker run -d \
-          --name visa-app \
-          -p 8080:8080 \
-          690816807099.dkr.ecr.us-east-1.amazonaws.com/visa:latest
+      - name: Run Docker Image
+        run: |
+          docker stop visa-app || true
+          docker rm visa-app || true
+          docker run -d \
+            --name visa-app \
+            -p 8080:8080 \
+            690816807099.dkr.ecr.us-east-1.amazonaws.com/visa:latest
